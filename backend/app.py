@@ -438,13 +438,14 @@ def update_counsellor_profile():
     clerk_id = data.get('clerk_id')
     name = data.get('name', 'Anonymous Counsellor')
     spec = data.get('specialization', 'General Support')
+    role = data.get('role', 'counsellor')
     
     if not clerk_id:
         return jsonify({"error": "clerk_id is required"}), 400
 
     db.counsellors.update_one(
         {"clerk_id": clerk_id},
-        {"$set": {"clerk_id": clerk_id, "name": name, "specialization": spec, "updated_at": datetime.utcnow()}},
+        {"$set": {"clerk_id": clerk_id, "name": name, "specialization": spec, "role": role, "updated_at": datetime.utcnow()}},
         upsert=True
     )
     return jsonify({"message": "Profile updated"}), 200
@@ -452,7 +453,7 @@ def update_counsellor_profile():
 
 @app.route('/api/counsellors', methods=['GET'])
 def list_counsellors():
-    counsellors = list(db.counsellors.find({}, {"_id": 0}))
+    counsellors = list(db.counsellors.find({"role": "counsellor"}, {"_id": 0}))
     return jsonify(counsellors), 200
 
 # ─────────────────────────────────────────────

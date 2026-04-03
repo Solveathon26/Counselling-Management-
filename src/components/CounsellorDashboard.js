@@ -12,7 +12,7 @@ const CounsellorDashboard = () => {
   
   const [profile, setProfile] = useState({
     name: user?.fullName || '',
-    specialization: 'General Support'
+    specialization: user?.unsafeMetadata?.specialization || 'General Support'
   });
   const [updating, setUpdating] = useState(false);
   const [updated, setUpdated] = useState(false);
@@ -49,7 +49,8 @@ const CounsellorDashboard = () => {
       await axios.post('http://localhost:5000/api/counsellors/profile', {
         clerk_id: user?.id,
         name: profile.name,
-        specialization: profile.specialization
+        specialization: profile.specialization,
+        role: 'counsellor'
       });
       setUpdated(true);
       setTimeout(() => setUpdated(false), 3000);

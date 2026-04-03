@@ -15,7 +15,7 @@ const row = (label, val, unit = '', color = 'var(--text-main)') =>
 const StudentDashboard = () => {
   const { user } = useUser();
   const regno = user?.username?.toLowerCase();
-  const block = user?.publicMetadata?.block || 'Block A';
+  const block = user?.unsafeMetadata?.block || user?.publicMetadata?.block || 'Block A';
 
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(true);

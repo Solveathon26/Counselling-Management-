@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { User, Users, Shield } from 'lucide-react';
+import { User, Users, Shield, Brain } from 'lucide-react';
 
 const RoleSelection = () => {
   const navigate = useNavigate();
@@ -45,6 +45,18 @@ const RoleSelection = () => {
           <Shield size={64} color="var(--danger)" style={{ marginBottom: '20px' }} />
           <h2 style={{ marginBottom: '12px' }}>Warden</h2>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Access block-wide analytics and manage student welfare alerts.</p>
+        </div>
+
+        <div 
+          onClick={() => navigate('/warden/counsellor/signup')}
+          className="glass-panel" 
+          style={{ cursor: 'pointer', padding: '40px', width: '280px', textAlign: 'center', transition: 'transform 0.2s', border: '1px solid var(--success)' }}
+          onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-8px)'}
+          onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+        >
+          <Brain size={64} color="var(--success)" style={{ marginBottom: '20px' }} />
+          <h2 style={{ marginBottom: '12px' }}>Counsellor</h2>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>Provide professional support and review predictive ML risk alerts.</p>
         </div>
       </div>
     </div>
