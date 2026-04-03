@@ -20,17 +20,17 @@ const CounsellorDashboard = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const aptRes = await axios.get('http://localhost:5000/api/counselling/appointments');
-        const predRes = await axios.get('http://localhost:5000/api/ml/predict');
+        const aptRes = await axios.get((process.env.REACT_APP_API_URL || (process.env.REACT_APP_API_URL || 'http://localhost:5000')) + '/api/counselling/appointments');
+        const predRes = await axios.get((process.env.REACT_APP_API_URL || (process.env.REACT_APP_API_URL || 'http://localhost:5000')) + '/api/ml/predict');
         setAppointments(aptRes.data);
         setPredictions(predRes.data);
         
         // Fetch current profile
-        const cRes = await axios.get('http://localhost:5000/api/counsellors');
+        const cRes = await axios.get((process.env.REACT_APP_API_URL || (process.env.REACT_APP_API_URL || 'http://localhost:5000')) + '/api/counsellors');
         const myProfile = cRes.data.find(c => c.clerk_id === user?.id);
         if (myProfile) {
           setProfile({ name: myProfile.name, specialization: myProfile.specialization });
-          const myStRes = await axios.get(`http://localhost:5000/api/counselling/my_students/${encodeURIComponent(myProfile.name)}`);
+          const myStRes = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/counselling/my_students/${encodeURIComponent(myProfile.name)}`);
           setMyStudents(myStRes.data);
         }
       } catch (err) {
@@ -46,7 +46,7 @@ const CounsellorDashboard = () => {
     e.preventDefault();
     setUpdating(true);
     try {
-      await axios.post('http://localhost:5000/api/counsellors/profile', {
+      await axios.post((process.env.REACT_APP_API_URL || (process.env.REACT_APP_API_URL || 'http://localhost:5000')) + '/api/counsellors/profile', {
         clerk_id: user?.id,
         name: profile.name,
         specialization: profile.specialization,

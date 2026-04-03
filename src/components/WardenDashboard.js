@@ -17,8 +17,8 @@ const WardenDashboard = () => {
     const fetchAnalytics = async () => {
       try {
         const [res, compRes] = await Promise.all([
-          axios.get('http://localhost:5000/api/analytics/blocks'),
-          axios.get('http://localhost:5000/api/complaints')
+          axios.get((process.env.REACT_APP_API_URL || (process.env.REACT_APP_API_URL || 'http://localhost:5000')) + '/api/analytics/blocks'),
+          axios.get((process.env.REACT_APP_API_URL || (process.env.REACT_APP_API_URL || 'http://localhost:5000')) + '/api/complaints')
         ]);
         setAnalytics(res.data);
         setComplaints(compRes.data);
@@ -41,7 +41,7 @@ const WardenDashboard = () => {
     setSelectedBlock(block);
     setStudentsLoading(true);
     try {
-      const res = await axios.get(`http://localhost:5000/api/analytics/students/${block}`);
+      const res = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/analytics/students/${block}`);
       setStudents(res.data);
     } catch (err) {
       console.error(err);
