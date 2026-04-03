@@ -7,9 +7,24 @@ from flask_socketio import SocketIO, join_room, emit
 from pymongo import MongoClient
 from dotenv import load_dotenv
 
+import joblib
+import numpy as np
+
 load_dotenv()
 
 app = Flask(__name__)
+
+# Load ML Model Dictionary
+try:
+    model_data = joblib.load(os.path.join(os.path.dirname(__file__), 'stress_model.pkl'))
+    clf_model = model_data.get('clf_model')
+    reg_model = model_data.get('reg_model')
+    label_encoder = model_data.get('label_encoder')
+    print("DEBUG ML: Model components loaded successfully.")
+except Exception as e:
+    clf_model = reg_model = label_encoder = None
+    print(f"DEBUG ML: Model loading failed ({e}). Using dummy prediction mode.")
+
 # Robust CORS configuration
 CORS(app, resources={r"/api/*": {"origins": "*"}})
 socketio = SocketIO(app, cors_allowed_origins="*")
@@ -68,14 +83,52 @@ def log_wellbeing():
             "pulse":  data.get('pulse_bpm'),
             "sleep":  data.get('sleep_hours'),
             "social": data.get('social_life'),
+            "meals_missed": data.get('meals_missed'),
             "ts":     ts
         }
         entry = {k: v for k, v in entry.items() if v is not None or k == 'ts'}
 
+        # Calculate live ML prediction if model exists
+        prediction = None
+        if clf_model and label_encoder and reg_model:
+            try:
+                # Features: [mood, self_stress, sleep_hours, pulse, social_life, social_activity (friend avg), meals_missed]
+                # Fallbacks to user's current values if no data exists
+                doc = db.students.find_one({"regno": regno}) or {}
+                f_entries = recent(doc.get(f"friend_{regno}", []))
+                social_activity = safe_avg(f_entries, "social_obs") or data.get('social_life', 3)
+                meals_missed = data.get('meals_missed', 0)
+                
+                features = np.array([[
+                    data.get('mood_score', 3), 
+                    data.get('stress_score', 2), 
+                    data.get('sleep_hours', 7),
+                    data.get('pulse_bpm', 72),
+                    data.get('social_life', 3),
+                    social_activity,
+                    meals_missed
+                ]])
+                
+                risk_lvl_idx = clf_model.predict(features)[0]
+                risk_lvl = label_encoder.classes_[risk_lvl_idx] if hasattr(label_encoder, 'classes_') else str(risk_lvl_idx)
+                risk_score = float(reg_model.predict(features)[0])
+                
+                prediction = {
+                    "risk_level": risk_lvl,
+                    "risk_score": round(risk_score, 2),
+                    "ts": ts
+                }
+            except Exception as ml_err:
+                print(f"ML Prediction Error: {ml_err}")
+
+        update_fields = {"block": block, "student_hash": hash_regno(regno)}
+        if prediction:
+            update_fields["latest_prediction"] = prediction
+
         db.students.update_one(
             {"regno": regno},
             {
-                "$set":  {"block": block, "student_hash": hash_regno(regno)},
+                "$set":  update_fields,
                 "$push": {"student_entries": entry}
             },
             upsert=True
@@ -237,7 +290,8 @@ def get_wellbeing_summary(regno):
                 "avg_mood_obs":   safe_avg(f_entries, 'mood_obs'),
                 "avg_stress_obs": safe_avg(f_entries, 'stress_obs'),
                 "avg_social_obs": safe_avg(f_entries, 'social_obs'),
-            }
+            },
+            "prediction": doc.get('latest_prediction')
         }), 200
     except Exception as e:
         print(f"Error in summary for {regno}: {e}")
@@ -358,15 +412,18 @@ def get_my_students(counsellor_name):
         avg_mood = safe_avg(entries, 'mood')
         avg_stress = safe_avg(entries, 'stress')
         p_entries = recent(doc.get(f"parent_{regno}", []))
+        pred = doc.get('latest_prediction', {})
         result.append({
             "regno": regno,
             "avg_mood": avg_mood,
             "avg_stress": avg_stress,
             "parent_stress": safe_avg(p_entries, 'stress_obs'),
             "is_alarming": (avg_mood is not None and avg_mood <= 2.5) or (avg_stress is not None and avg_stress >= 4.0),
-            "meals_missed": 2,
-            "classes_skipped": 3,
-            "parents_contact": f"parent_{regno}@example.com"
+            "ml_risk": pred.get('risk_level', 'N/A'),
+            "ml_score": pred.get('risk_score', 'N/A'),
+            "meals_missed": safe_avg(entries, 'meals_missed') or 0,
+            "classes_skipped": 0, # Placeholder for future feature
+            "parents_contact": f"parent_{regno}@university.edu"
         })
     return jsonify(result), 200
 
@@ -433,11 +490,24 @@ def get_user_meta(clerk_id):
 
 @app.route('/api/ml/predict', methods=['GET'])
 def predict_stress():
-    dummy = [
-        {"regno": "3223a", "student_hash": hash_regno("3223a"), "risk_level": "High",   "reason": "Consistent drop in mood over 3 weeks"},
-        {"regno": "student_1", "student_hash": hash_regno("student_1"), "risk_level": "Medium",  "reason": "Spike in stress on weekends"},
-    ]
-    return jsonify(dummy), 200
+    students = list(db.students.find({"latest_prediction": {"$exists": True}}))
+    results = []
+    for s in students:
+        pred = s['latest_prediction']
+        results.append({
+            "regno": s['regno'],
+            "student_hash": s['student_hash'],
+            "risk_level": pred['risk_level'],
+            "risk_score": pred['risk_score'],
+            "reason": f"Predicted based on last check-in at {pred['ts'][:10]}"
+        })
+
+    # Add dummy if no data (to keep UI occupied)
+    if not results:
+        results = [
+            {"regno": "demo-01", "student_hash": hash_regno("demo-01"), "risk_level": "High",   "reason": "Wait for student check-ins for real-time data."}
+        ]
+    return jsonify(results), 200
 
 
 if __name__ == '__main__':

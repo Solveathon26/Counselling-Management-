@@ -190,8 +190,9 @@ const CounsellorDashboard = () => {
                       <div><span style={{ color: 'var(--text-muted)' }}>Avg Mood:</span> <strong style={{ color: 'var(--accent)' }}>{st.avg_mood ?? 'N/A'}/5</strong></div>
                       <div><span style={{ color: 'var(--text-muted)' }}>Avg Stress:</span> <strong style={{ color: st.avg_stress >= 4 ? 'var(--danger)' : 'var(--primary)' }}>{st.avg_stress ?? 'N/A'}/5</strong></div>
                       <div><span style={{ color: 'var(--text-muted)' }}>Parent Stress:</span> <strong style={{ color: st.parent_stress >= 4 ? 'var(--danger)' : 'var(--primary)' }}>{st.parent_stress ?? 'N/A'}/5</strong></div>
+                      <div><span style={{ color: 'var(--text-muted)' }}>AI Predicted Risk:</span> <strong style={{ color: st.ml_risk === 'High' ? 'var(--danger)' : 'var(--success)' }}>{st.ml_risk}</strong></div>
+                      <div><span style={{ color: 'var(--text-muted)' }}>Prediction Score:</span> <strong style={{ color: 'var(--accent)' }}>{st.ml_score}</strong></div>
                       <div><span style={{ color: 'var(--text-muted)' }}>Meals Missed:</span> <strong>{st.meals_missed}</strong></div>
-                      <div><span style={{ color: 'var(--text-muted)' }}>Classes Skipped:</span> <strong>{st.classes_skipped}</strong></div>
                       <div style={{ gridColumn: '1 / -1' }}><span style={{ color: 'var(--text-muted)' }}>Parent Contact:</span> {st.parents_contact}</div>
                     </div>
                   </div>

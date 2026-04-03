@@ -42,6 +42,7 @@ const StudentDashboard = () => {
     pulse_bpm: 72,
     sleep_hours: 7,
     social_life: 3,
+    meals_missed: 0,
   });
 
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
@@ -95,6 +96,7 @@ const StudentDashboard = () => {
         pulse_bpm: parseInt(form.pulse_bpm),
         sleep_hours: parseFloat(form.sleep_hours),
         social_life: parseInt(form.social_life),
+        meals_missed: parseInt(form.meals_missed),
       });
       setLogStatus('Entry Saved!');
       setTimeout(() => setLogStatus(''), 3000);
@@ -171,6 +173,39 @@ const StudentDashboard = () => {
         </div>
       )}
 
+      {/* ML Prediction Badge */}
+      {summary?.prediction && (
+        <div className="glass-panel" style={{ 
+          marginBottom: '32px', 
+          border: `1px solid ${summary.prediction.risk_level === 'High' ? 'var(--danger)' : 'var(--accent)'}`,
+          background: 'rgba(255,255,255,0.02)'
+        }}>
+          <h3 style={{ marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--accent)' }}>
+            <Zap size={20} /> ML Health Insight
+          </h3>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <p style={{ color: 'var(--text-muted)', margin: 0 }}>
+              Based on your patterns, our AI predicts your current stress level as:
+            </p>
+            <div style={{ textAlign: 'right' }}>
+              <span style={{ 
+                background: summary.prediction.risk_level === 'High' ? 'var(--danger)' : 'var(--accent)', 
+                color: 'white', 
+                padding: '4px 12px', 
+                borderRadius: '20px', 
+                fontWeight: 'bold',
+                fontSize: '1rem'
+              }}>
+                {summary.prediction.risk_level} Risk
+              </span>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+                Score: {summary.prediction.risk_score}/100
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ─── Daily Check-in ─── */}
       <div className="glass-panel" style={{ marginBottom: '32px', border: '1px solid var(--accent)' }}>
         <h2 style={{ marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '10px', color: 'var(--accent)' }}>
@@ -230,6 +265,22 @@ const StudentDashboard = () => {
                 <strong style={{ color: '#34d399' }}>{socialLabel[form.social_life]}</strong>
               </label>
               <input type="range" min="1" max="5" value={form.social_life} onChange={e => set('social_life', e.target.value)} />
+            </div>
+
+            {/* Meals Missed */}
+            <div>
+              <label style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Zap size={15} color="#f472b6" /> Meals Missed Today</span>
+                <strong style={{ color: form.meals_missed > 2 ? 'var(--danger)' : '#f472b6' }}>{form.meals_missed || 0}</strong>
+              </label>
+              <input
+                type="number"
+                min="0" max="10"
+                value={form.meals_missed}
+                onChange={e => set('meals_missed', e.target.value)}
+                placeholder="0"
+                style={{ marginBottom: 0 }}
+              />
             </div>
 
           </div>
