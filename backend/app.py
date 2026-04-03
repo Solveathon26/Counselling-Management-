@@ -83,9 +83,7 @@ def log_wellbeing():
 
     elif submitted_by == 'parent':
         entry = {
-            "mood_obs":   data.get('parent_mood_obs'),
             "stress_obs": data.get('parent_stress_obs'),
-            "sleep_obs":  data.get('parent_sleep_obs'),
             "ts":         ts
         }
         entry = {k: v for k, v in entry.items() if v is not None or k == 'ts'}
@@ -359,10 +357,12 @@ def get_my_students(counsellor_name):
         entries = recent(doc.get('student_entries', []))
         avg_mood = safe_avg(entries, 'mood')
         avg_stress = safe_avg(entries, 'stress')
+        p_entries = recent(doc.get(f"parent_{regno}", []))
         result.append({
             "regno": regno,
             "avg_mood": avg_mood,
             "avg_stress": avg_stress,
+            "parent_stress": safe_avg(p_entries, 'stress_obs'),
             "is_alarming": (avg_mood is not None and avg_mood <= 2.5) or (avg_stress is not None and avg_stress >= 4.0),
             "meals_missed": 2,
             "classes_skipped": 3,

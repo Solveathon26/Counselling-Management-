@@ -18,10 +18,14 @@ const ParentDashboard = () => {
   const [regno, setRegno] = useState('');
   const [loading, setLoading] = useState(false);
   const [summary, setSummary] = useState(null);
-  
+
   const [alertMsg, setAlertMsg] = useState('');
   const [alerting, setAlerting] = useState(false);
   const [alerted, setAlerted] = useState(false);
+
+  const [parentStress, setParentStress] = useState(3);
+  const [savingLog, setSavingLog] = useState(false);
+  const [logStatus, setLogStatus] = useState('');
 
   const fetchSummary = async (e) => {
     e.preventDefault();
@@ -56,6 +60,25 @@ const ParentDashboard = () => {
     }
   };
 
+  const handleLogStress = async (e) => {
+    e.preventDefault();
+    if (!regno) return;
+    setSavingLog(true);
+    try {
+      await axios.post('http://localhost:5000/api/wellbeing', {
+        regno: regno.trim().toLowerCase(),
+        submitted_by: 'parent',
+        parent_stress_obs: parseInt(parentStress)
+      });
+      setLogStatus('Observation saved!');
+      setTimeout(() => setLogStatus(''), 3000);
+    } catch {
+      alert('Failed to save observation.');
+    } finally {
+      setSavingLog(false);
+    }
+  };
+
   return (
     <div className="animate-fade-in" style={{ padding: '40px 20px' }}>
       <div className="dashboard-header" style={{ marginBottom: '32px' }}>
@@ -70,11 +93,11 @@ const ParentDashboard = () => {
             <form onSubmit={fetchSummary}>
               <div style={{ marginBottom: '16px' }}>
                 <label style={{ display: 'block', marginBottom: '8px' }}>Student Registration No.</label>
-                <input 
-                  type="text" 
-                  value={regno} 
+                <input
+                  type="text"
+                  value={regno}
                   onChange={e => setRegno(e.target.value)}
-                  placeholder="e.g., 3223a" 
+                  placeholder="e.g., 3223a"
                   required
                 />
               </div>
@@ -85,28 +108,54 @@ const ParentDashboard = () => {
           </div>
 
           {summary?.has_data && (
-            <div className="glass-panel" style={{ marginTop: '24px', border: '1px solid var(--danger)' }}>
-              <h3 style={{ marginBottom: '16px', color: 'var(--danger)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <ShieldAlert size={20} /> Inform Warden
-              </h3>
-              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '16px' }}>
-                If you notice concerning patterns in your child's analytics, you can send a direct alert to the hostel warden.
-              </p>
-              <form onSubmit={handleAlert}>
-                <textarea 
-                  value={alertMsg} 
-                  onChange={e => setAlertMsg(e.target.value)} 
-                  placeholder="Additional details..." 
-                  style={{ width: '100%', minHeight: '80px', marginBottom: '16px', background: 'var(--bg-dark)', color: 'white', border: '1px solid var(--border)', borderRadius: '8px', padding: '8px' }}
-                />
-                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                  <button type="submit" className="btn btn-danger" disabled={alerting}>
-                    {alerting ? 'Sending...' : 'Send Alert'}
-                  </button>
-                  {alerted && <span style={{ color: 'var(--danger)', display: 'flex', gap: '4px', alignItems: 'center' }}><CheckCircle size={16}/> Alert Sent</span>}
-                </div>
-              </form>
-            </div>
+            <>
+              <div className="glass-panel" style={{ marginTop: '24px', border: '1px solid var(--accent)' }}>
+                <h3 style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--accent)' }}>
+                  <Activity size={20} /> Log Stress Observation
+                </h3>
+                <form onSubmit={handleLogStress}>
+                  <label style={{ display: 'block', marginBottom: '8px' }}>How stressed does your child seem today?</label>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
+                    <input 
+                      type="range" min="1" max="5" 
+                      value={parentStress} 
+                      onChange={e => setParentStress(e.target.value)} 
+                      style={{ flex: 1 }}
+                    />
+                    <strong style={{ minWidth: '40px', color: 'var(--accent)' }}>{parentStress}/5</strong>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                    <button type="submit" className="btn btn-primary" disabled={savingLog}>
+                      {savingLog ? 'Saving...' : 'Save Observation'}
+                    </button>
+                    {logStatus && <span style={{ color: 'var(--success)', display: 'flex', gap: '4px', alignItems: 'center' }}><CheckCircle size={16}/> {logStatus}</span>}
+                  </div>
+                </form>
+              </div>
+
+              <div className="glass-panel" style={{ marginTop: '24px', border: '1px solid var(--danger)' }}>
+                <h3 style={{ marginBottom: '16px', color: 'var(--danger)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <ShieldAlert size={20} /> Inform Warden
+                </h3>
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '16px' }}>
+                  If you notice concerning patterns in your child's analytics, you can send a direct alert to the hostel warden.
+                </p>
+                <form onSubmit={handleAlert}>
+                  <textarea
+                    value={alertMsg}
+                    onChange={e => setAlertMsg(e.target.value)}
+                    placeholder="Additional details..."
+                    style={{ width: '100%', minHeight: '80px', marginBottom: '16px', background: 'var(--bg-dark)', color: 'white', border: '1px solid var(--border)', borderRadius: '8px', padding: '8px' }}
+                  />
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                    <button type="submit" className="btn btn-danger" disabled={alerting}>
+                      {alerting ? 'Sending...' : 'Send Alert'}
+                    </button>
+                    {alerted && <span style={{ color: 'var(--danger)', display: 'flex', gap: '4px', alignItems: 'center' }}><CheckCircle size={16} /> Alert Sent</span>}
+                  </div>
+                </form>
+              </div>
+            </>
           )}
         </div>
 
@@ -115,29 +164,25 @@ const ParentDashboard = () => {
             summary.has_data ? (
               <div className="glass-panel">
                 <h2 style={{ marginBottom: '24px', color: '#f472b6' }}>7-Day Analytics for {regno.toUpperCase()}</h2>
-                
-                {summary.is_alarming && (
+
+                {(summary.student?.avg_stress >= 4 || summary.friend?.avg_stress_obs >= 4) && (
                   <div style={{ background: 'rgba(239,68,68,0.1)', padding: '16px', borderRadius: '8px', borderLeft: '4px solid var(--danger)', marginBottom: '24px' }}>
                     <strong style={{ color: 'var(--danger)', display: 'block', marginBottom: '4px' }}>Attention</strong>
-                    <span style={{ fontSize: '0.9rem', color: 'var(--text-main)' }}>Your child's recent analytics show elevated stress or low mood.</span>
+                    <span style={{ fontSize: '0.9rem', color: 'var(--text-main)' }}>Your child's recent analytics show elevated stress levels.</span>
                   </div>
                 )}
 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '24px' }}>
                   <div style={{ background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '8px' }}>
-                    <h3 style={{ color: 'var(--accent)', marginBottom: '16px', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '6px' }}><Heart size={16}/> Student Self-Reported</h3>
-                    {row('Avg Mood', summary.student?.avg_mood, '/5', 'var(--accent)')}
+                    <h3 style={{ color: 'var(--accent)', marginBottom: '16px', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '6px' }}><Heart size={16} /> Student Self-Reported</h3>
                     {row('Avg Stress', summary.student?.avg_stress, '/5', summary.student?.avg_stress >= 4 ? 'var(--danger)' : 'var(--primary)')}
-                    {row('Avg Sleep', summary.student?.avg_sleep, 'h', '#a78bfa')}
-                    {row('Avg Social', summary.student?.avg_social, '/5', '#34d399')}
                   </div>
 
                   <div style={{ background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '8px' }}>
-                    <h3 style={{ color: '#34d399', marginBottom: '16px', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '6px' }}><span style={{fontSize:'16px'}}>👥</span> Peer Observations</h3>
+                    <h3 style={{ color: '#34d399', marginBottom: '16px', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '6px' }}><span style={{ fontSize: '16px' }}>👥</span> Peer Observations</h3>
                     {summary.friend?.count > 0 ? (
                       <>
                         {row('Observed Stress', summary.friend?.avg_stress_obs, '/5', summary.friend?.avg_stress_obs >= 4 ? 'var(--danger)' : 'var(--primary)')}
-                        {row('Observed Social', summary.friend?.avg_social_obs, '/5', '#34d399')}
                         <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '12px' }}>Based on {summary.friend.count} reports</p>
                       </>
                     ) : (

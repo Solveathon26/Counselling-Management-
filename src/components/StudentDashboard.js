@@ -152,7 +152,7 @@ const StudentDashboard = () => {
 
       <div className="dashboard-header">
         <h1>Welcome, Reg. No. {regno}</h1>
-        <p style={{ color: 'var(--text-muted)' }}>Your 7-day well-being snapshot — tracked by you, your parents, and friends.</p>
+        <p style={{ color: 'var(--text-muted)' }}>Your 7-day well-being snapshot — tracked by you and your friends.</p>
       </div>
 
       {/* SOS Banner */}
@@ -307,17 +307,6 @@ const StudentDashboard = () => {
               {!s?.count && <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>No entries yet.</p>}
             </div>
 
-            <div className="glass-panel" style={{ border: p?.count ? '1px solid rgba(244,114,182,0.35)' : '' }}>
-              <h3 style={{ color: 'var(--text-muted)', marginBottom: '16px', fontSize: '0.9rem' }}>👨‍👩‍👦 Parent Observations</h3>
-              {p?.count ? (
-                <>
-                  {row('Mood', p?.avg_mood_obs, '/5', 'var(--accent)')}
-                  {row('Stress', p?.avg_stress_obs, '/5', p?.avg_stress_obs >= 4 ? 'var(--danger)' : 'var(--primary)')}
-                  {row('Sleep Cycle', p?.avg_sleep_obs, ' hrs', '#a78bfa')}
-                  <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '8px' }}>{p.count} report(s)</p>
-                </>
-              ) : <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>No parent data yet. Ask your parent to use the <strong>Parent Portal</strong>.</p>}
-            </div>
 
             <div className="glass-panel" style={{ border: fr?.count ? '1px solid rgba(52,211,153,0.35)' : '' }}>
               <h3 style={{ color: 'var(--text-muted)', marginBottom: '16px', fontSize: '0.9rem' }}>👥 Peer Observations</h3>
