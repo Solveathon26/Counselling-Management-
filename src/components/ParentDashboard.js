@@ -15,7 +15,7 @@ const row = (label, val, unit = '', color = 'var(--text-main)') =>
 const ParentDashboard = () => {
   const navigate = useNavigate();
   const { user } = useUser();
-  const [regno, setRegno] = useState('');
+  const [regno, setRegno] = useState(user?.publicMetadata?.linkedStudentRegno || '');
   const [loading, setLoading] = useState(false);
   const [summary, setSummary] = useState(null);
 
@@ -26,6 +26,33 @@ const ParentDashboard = () => {
   const [parentStress, setParentStress] = useState(3);
   const [savingLog, setSavingLog] = useState(false);
   const [logStatus, setLogStatus] = useState('');
+
+  React.useEffect(() => {
+    const fetchLink = async () => {
+      if (!user) return;
+      setLoading(true);
+      try {
+        const res = await axios.get(`http://localhost:5000/api/users/meta/${user.id}`);
+        if (res.data.linked_regno) {
+          const lr = res.data.linked_regno.trim().toLowerCase();
+          setRegno(lr);
+          const summaryRes = await axios.get(`http://localhost:5000/api/wellbeing/summary/${lr}`);
+          setSummary(summaryRes.data);
+        } else if (user.publicMetadata?.linkedStudentRegno) {
+          // Fallback if user has Clerk metadata instead
+          const cr = user.publicMetadata.linkedStudentRegno.trim().toLowerCase();
+          setRegno(cr);
+          const summaryRes = await axios.get(`http://localhost:5000/api/wellbeing/summary/${cr}`);
+          setSummary(summaryRes.data);
+        }
+      } catch (err) {
+        console.error('Data loading failed:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchLink();
+  }, [user]);
 
   const fetchSummary = async (e) => {
     e.preventDefault();
@@ -83,29 +110,38 @@ const ParentDashboard = () => {
     <div className="animate-fade-in" style={{ padding: '40px 20px' }}>
       <div className="dashboard-header" style={{ marginBottom: '32px' }}>
         <h1 className="gradient-text">Parent Portal</h1>
-        <p style={{ color: 'var(--text-muted)' }}>Logged in as Parent: <strong>{user?.username}</strong>. View your child's well-being analytics.</p>
+        <p style={{ color: 'var(--text-muted)' }}>
+          {regno 
+            ? `Monitoring Well-being for Student: ${regno.toUpperCase()}` 
+            : `Logged in as Parent: ${user?.username || 'User'}. Please link a student account.`}
+        </p>
       </div>
 
       <div style={{ display: 'flex', gap: '32px', flexWrap: 'wrap' }}>
-        <div style={{ flex: '1 1 300px', maxWidth: '400px' }}>
-          <div className="glass-panel">
-            <h3 style={{ marginBottom: '16px', fontSize: '1rem', color: 'var(--text-muted)' }}>Student Search</h3>
-            <form onSubmit={fetchSummary}>
-              <div style={{ marginBottom: '16px' }}>
-                <label style={{ display: 'block', marginBottom: '8px' }}>Student Registration No.</label>
-                <input
-                  type="text"
-                  value={regno}
-                  onChange={e => setRegno(e.target.value)}
-                  placeholder="e.g., 3223a"
-                  required
-                />
-              </div>
-              <button type="submit" className="btn btn-primary" disabled={loading} style={{ width: '100%' }}>
-                {loading ? 'Searching...' : 'View Analytics'}
-              </button>
-            </form>
+        {!regno && (
+          <div style={{ flex: '1 1 300px', maxWidth: '400px' }}>
+            <div className="glass-panel">
+              <h3 style={{ marginBottom: '16px', fontSize: '1rem', color: 'var(--text-muted)' }}>Student Search</h3>
+              <form onSubmit={fetchSummary}>
+                <div style={{ marginBottom: '16px' }}>
+                  <label style={{ display: 'block', marginBottom: '8px' }}>Student Registration No.</label>
+                  <input
+                    type="text"
+                    value={regno}
+                    onChange={e => setRegno(e.target.value)}
+                    placeholder="e.g., 3223a"
+                    required
+                  />
+                </div>
+                <button type="submit" className="btn btn-primary" disabled={loading} style={{ width: '100%' }}>
+                  {loading ? 'Searching...' : 'View Analytics'}
+                </button>
+              </form>
+            </div>
           </div>
+        )}
+
+        <div style={{ flex: regno ? '1 1 300px' : '1 1 300px', maxWidth: '400px' }}>
 
           {summary?.has_data && (
             <>

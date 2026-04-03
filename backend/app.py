@@ -398,6 +398,34 @@ def list_counsellors():
     counsellors = list(db.counsellors.find({}, {"_id": 0}))
     return jsonify(counsellors), 200
 
+# ─────────────────────────────────────────────
+#  USER LINKAGE (Student/Parent Mapping)
+# ─────────────────────────────────────────────
+
+@app.route('/api/users/link', methods=['POST'])
+def link_user():
+    data = request.json
+    clerk_id = data.get('clerk_id')
+    role = data.get('role')
+    linked_regno = data.get('linked_regno')
+
+    if not clerk_id or not role:
+        return jsonify({"error": "clerk_id and role are required"}), 400
+
+    db.user_links.update_one(
+        {"clerk_id": clerk_id},
+        {"$set": {"clerk_id": clerk_id, "role": role, "linked_regno": linked_regno}},
+        upsert=True
+    )
+    return jsonify({"message": "User linked successfully"}), 200
+
+@app.route('/api/users/meta/<clerk_id>', methods=['GET'])
+def get_user_meta(clerk_id):
+    link = db.user_links.find_one({"clerk_id": clerk_id}, {"_id": 0})
+    if not link:
+        return jsonify({"role": "student"}), 200 # Default
+    return jsonify(link), 200
+
 
 # ─────────────────────────────────────────────
 #  ML PLACEHOLDER
@@ -413,4 +441,4 @@ def predict_stress():
 
 
 if __name__ == '__main__':
-    socketio.run(app, port=5000, debug=True, use_reloader=False)
+    socketio.run(app, port=5000, debug=True, use_reloader=True)

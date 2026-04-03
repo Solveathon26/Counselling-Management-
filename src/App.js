@@ -10,6 +10,8 @@ import CounsellorDashboard from './components/CounsellorDashboard';
 import ParentDashboard from './components/ParentDashboard';
 import StudentSignUp from './components/StudentSignUp';
 import CounsellorSignUp from './components/CounsellorSignUp';
+import ParentSignUp from './components/ParentSignUp';
+import RoleSelection from './components/RoleSelection';
 import './index.css';
 
 function App() {
@@ -20,9 +22,10 @@ function App() {
           {/* Public */}
           <Route path="/" element={<Landing />} />
           
-          {/* Public Warden Portal & Signup */}
-          <Route path="/warden"           element={<WardenDashboard />} />
-          <Route path="/warden/signup/*" element={<StudentSignUp />} />
+          {/* Registration Routes */}
+          <Route path="/sign-up"             element={<RoleSelection />} />
+          <Route path="/sign-up/parent/*"    element={<ParentSignUp />} />
+          <Route path="/warden/signup/*"     element={<StudentSignUp />} />
           <Route path="/warden/counsellor/signup/*" element={<CounsellorSignUp />} />
 
           {/* Clerk Login Routes */}
