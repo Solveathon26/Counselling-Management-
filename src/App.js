@@ -42,6 +42,7 @@ function App() {
                 <div className="main-content">
                   <Routes>
                     <Route path="/student"    element={<StudentDashboard />} />
+                    <Route path="/warden"     element={<WardenDashboard />} />
                     <Route path="/counsellor" element={<CounsellorDashboard />} />
                     <Route path="/parent"     element={<ParentDashboard />} />
                     <Route path="*"           element={<Navigate to="/" replace />} />
