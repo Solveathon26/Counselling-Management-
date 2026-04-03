@@ -2,11 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { AlertCircle, Lock, Users, ChevronDown, ChevronUp, UserPlus } from 'lucide-react';
+import { AlertCircle, Lock, Users, ChevronDown, ChevronUp, UserPlus, MessageSquare } from 'lucide-react';
 
 const WardenDashboard = () => {
   const navigate = useNavigate();
   const [analytics, setAnalytics] = useState([]);
+  const [complaints, setComplaints] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedBlock, setSelectedBlock] = useState(null);
   const [students, setStudents] = useState([]);
@@ -15,8 +16,12 @@ const WardenDashboard = () => {
   useEffect(() => {
     const fetchAnalytics = async () => {
       try {
-        const res = await axios.get('http://localhost:5000/api/analytics/blocks');
+        const [res, compRes] = await Promise.all([
+          axios.get('http://localhost:5000/api/analytics/blocks'),
+          axios.get('http://localhost:5000/api/complaints')
+        ]);
         setAnalytics(res.data);
+        setComplaints(compRes.data);
       } catch (err) {
         console.error(err);
       } finally {
@@ -120,6 +125,28 @@ const WardenDashboard = () => {
             <Bar dataKey="avg_mood" name="Avg Mood Level" fill="#8b5cf6" radius={[4, 4, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
+      </div>
+
+      {/* Complaints Box */}
+      <div className="glass-panel" style={{ marginBottom: '32px', border: '1px solid var(--accent)' }}>
+        <h2 style={{ marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--accent)' }}>
+          <MessageSquare size={24} /> Anonymous Feedback & Complaints
+        </h2>
+        {complaints.length === 0 ? (
+          <p style={{ color: 'var(--text-muted)' }}>No anonymous complaints have been submitted yet.</p>
+        ) : (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            {complaints.map((c, i) => (
+              <div key={i} style={{ padding: '16px', background: 'rgba(255,255,255,0.05)', borderRadius: '8px', borderLeft: '4px solid var(--accent)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '8px' }}>
+                  <strong style={{ color: 'var(--accent)' }}>{c.block}</strong>
+                  <span style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>{new Date(c.created_at).toLocaleString()}</span>
+                </div>
+                <p style={{ fontSize: '0.95rem', margin: 0, whiteSpace: 'pre-wrap' }}>{c.message}</p>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Block Cards with expandable individual details */}

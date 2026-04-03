@@ -511,5 +511,31 @@ def predict_stress():
     return jsonify(results), 200
 
 
+# ─────────────────────────────────────────────
+#  COMPLAINTS (Anonymous)
+# ─────────────────────────────────────────────
+
+@app.route('/api/complaints', methods=['POST'])
+def submit_complaint():
+    data = request.json
+    block = data.get('block', 'Unknown')
+    message = data.get('message', '').strip()
+    
+    if not message:
+        return jsonify({"error": "Message is required"}), 400
+
+    db.complaints.insert_one({
+        "block": block,
+        "message": message,
+        "created_at": datetime.utcnow().isoformat()
+    })
+    return jsonify({"message": "Complaint submitted anonymously"}), 201
+
+@app.route('/api/complaints', methods=['GET'])
+def get_complaints():
+    complaints = list(db.complaints.find({}, {"_id": 0}))
+    complaints.sort(key=lambda x: x.get("created_at", ""), reverse=True)
+    return jsonify(complaints), 200
+
 if __name__ == '__main__':
     socketio.run(app, port=5000, debug=True, use_reloader=True)

@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
-import { ShieldAlert, Calendar, CheckCircle, Activity, Heart, Moon, Zap, Video } from 'lucide-react';
+import { ShieldAlert, Calendar, CheckCircle, Activity, Heart, Moon, Zap, Video, MessageSquare } from 'lucide-react';
 import { useUser } from '@clerk/react';
 
 
@@ -35,6 +35,9 @@ const StudentDashboard = () => {
 
   const [addFriendRegno, setAddFriendRegno] = useState('');
   const [connStatus, setConnStatus] = useState('');
+
+  const [complaintMsg, setComplaintMsg] = useState('');
+  const [complaintStatus, setComplaintStatus] = useState('');
 
   const [form, setForm] = useState({
     mood_score: 3,
@@ -139,6 +142,22 @@ const StudentDashboard = () => {
       fetchSummary();
       setTimeout(() => setBookingStatus(''), 5000);
     } catch { alert('Failed to book session.'); }
+  };
+
+  const handleComplaintSubmit = async (e) => {
+    e.preventDefault();
+    if (!complaintMsg.trim()) return;
+    try {
+      await axios.post('http://localhost:5000/api/complaints', {
+        block: block,
+        message: complaintMsg
+      });
+      setComplaintStatus('Sent anonymously!');
+      setComplaintMsg('');
+      setTimeout(() => setComplaintStatus(''), 4000);
+    } catch {
+      alert('Failed to send complaint.');
+    }
   };
 
   if (loading) return <div style={{ padding: '40px', color: 'var(--text-muted)' }}>Loading...</div>;
@@ -445,6 +464,44 @@ const StudentDashboard = () => {
           </div>
         )}
       </div>
+
+      {/* ─── Anonymous Complaint Box ─── */}
+      <div className="glass-panel" style={{ marginTop: '32px', border: '1px solid var(--accent)' }}>
+        <h2 style={{ marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--accent)' }}>
+          <MessageSquare size={24} /> Anonymous Warden Feedback
+        </h2>
+        <p style={{ color: 'var(--text-muted)', marginBottom: '16px', fontSize: '0.9rem' }}>
+          Report issues safely. Your Registration Number will <strong>never</strong> be shared with the warden, only your hostel block ({block}).
+        </p>
+        <form onSubmit={handleComplaintSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <textarea
+            rows="4"
+            placeholder="Describe your issue or provide feedback here..."
+            value={complaintMsg}
+            onChange={(e) => setComplaintMsg(e.target.value)}
+            style={{ 
+              width: '100%', 
+              padding: '12px', 
+              borderRadius: '8px', 
+              background: 'rgba(255,255,255,0.05)', 
+              color: 'white', 
+              border: '1px solid var(--border)',
+              resize: 'vertical'
+            }}
+          />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+            <button type="submit" className="btn btn-secondary" style={{ background: 'var(--accent)', color: 'white' }}>
+              Send Anonymously
+            </button>
+            {complaintStatus && (
+              <span style={{ color: 'var(--success)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <CheckCircle size={16} /> {complaintStatus}
+              </span>
+            )}
+          </div>
+        </form>
+      </div>
+
     </div>
   );
 };
