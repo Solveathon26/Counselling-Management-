@@ -55,6 +55,7 @@ const CounsellorSignUp = () => {
           routing="path" 
           signInUrl="/login/counsellor"
           forceRedirectUrl="/counsellor"
+          unsafeMetadata={{ role: 'counsellor' }}
           appearance={{
             elements: {
               formButtonPrimary: 'clerk-btn-primary',

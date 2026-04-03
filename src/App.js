@@ -1,6 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, Outlet } from 'react-router-dom';
-import { Show, RedirectToSignIn, ClerkLoaded, ClerkLoading } from '@clerk/react';
+import { Show, RedirectToSignIn, ClerkLoaded, ClerkLoading, useUser } from '@clerk/react';
 
 import Sidebar from './components/Sidebar';
 import Landing from './components/Landing';
@@ -13,8 +13,18 @@ import StudentSignUp from './components/StudentSignUp';
 import CounsellorSignUp from './components/CounsellorSignUp';
 import ParentSignUp from './components/ParentSignUp';
 import RoleSelection from './components/RoleSelection';
-
+import WardenSignUp from './components/WardenSignUp';
 import './index.css';
+
+const RoleRoute = ({ children, allowedRole }) => {
+  const { user } = useUser();
+  if (!user) return <Navigate to="/" replace />;
+  const role = user?.publicMetadata?.role || user?.unsafeMetadata?.role || 'student';
+  if (role !== allowedRole) {
+    return <Navigate to={`/${role}`} replace />;
+  }
+  return children;
+};
 
 function App() {
   return (
@@ -28,6 +38,7 @@ function App() {
           {/* Registration */}
           <Route path="/sign-up" element={<RoleSelection />} />
           <Route path="/sign-up/parent/*" element={<ParentSignUp />} />
+          <Route path="/sign-up/warden/*" element={<WardenSignUp />} />
           <Route path="/warden/signup/*" element={<StudentSignUp />} />
           <Route path="/warden/counsellor/signup/*" element={<CounsellorSignUp />} />
 
@@ -61,10 +72,10 @@ function App() {
               </>
             }
           >
-            <Route path="student" element={<StudentDashboard />} />
-            <Route path="warden" element={<WardenDashboard />} />
-            <Route path="counsellor" element={<CounsellorDashboard />} />
-            <Route path="parent" element={<ParentDashboard />} />
+            <Route path="student" element={<RoleRoute allowedRole="student"><StudentDashboard /></RoleRoute>} />
+            <Route path="warden" element={<RoleRoute allowedRole="warden"><WardenDashboard /></RoleRoute>} />
+            <Route path="counsellor" element={<RoleRoute allowedRole="counsellor"><CounsellorDashboard /></RoleRoute>} />
+            <Route path="parent" element={<RoleRoute allowedRole="parent"><ParentDashboard /></RoleRoute>} />
           </Route>
 
           {/* Fallback */}

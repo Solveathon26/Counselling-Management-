@@ -51,6 +51,7 @@ const ParentSignUp = () => {
             path="/sign-up/parent"
             signInUrl="/login/parent"
             forceRedirectUrl="/sign-up/parent/link" // After signup, they need to select the student
+            unsafeMetadata={{ role: 'parent' }}
           />
         ) : (
           <div className="glass-panel">

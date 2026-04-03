@@ -8,7 +8,7 @@ const Sidebar = () => {
   const { signOut } = useClerk();
   
   const userName = user?.username || 'User';
-  const role = user?.publicMetadata?.role || 'student';
+  const role = user?.publicMetadata?.role || user?.unsafeMetadata?.role || 'student';
 
   const handleLogout = () => {
     signOut();
