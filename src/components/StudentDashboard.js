@@ -4,7 +4,7 @@ import { io } from 'socket.io-client';
 import { ShieldAlert, Calendar, CheckCircle, Activity, Heart, Moon, Zap, Video } from 'lucide-react';
 import { useUser } from '@clerk/react';
 
-const socket = io('http://localhost:5000');
+const socket = io('http://localhost:5000', { transports: ['polling', 'websocket'] });
 
 const row = (label, val, unit = '', color = 'var(--text-main)') =>
   val != null ? (
