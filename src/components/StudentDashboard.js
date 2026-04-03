@@ -1,10 +1,8 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
-import { io } from 'socket.io-client';
 import { ShieldAlert, Calendar, CheckCircle, Activity, Heart, Moon, Zap, Video } from 'lucide-react';
 import { useUser } from '@clerk/react';
 
-const socket = io('http://localhost:5000', { transports: ['polling', 'websocket'] });
 
 const row = (label, val, unit = '', color = 'var(--text-main)') =>
   val != null ? (
@@ -35,11 +33,8 @@ const StudentDashboard = () => {
   const [friendSaving, setFriendSaving] = useState(false);
   const [friendLogStatus, setFriendLogStatus] = useState('');
 
-  const [friendsList, setFriendsList] = useState([]);
-  const [pendingRequests, setPendingRequests] = useState([]);
   const [addFriendRegno, setAddFriendRegno] = useState('');
   const [connStatus, setConnStatus] = useState('');
-  const [incomingPing, setIncomingPing] = useState(null);
 
   const [form, setForm] = useState({
     mood_score: 3,
@@ -74,15 +69,8 @@ const StudentDashboard = () => {
       const peers = stdRes.data.filter(id => id !== regno);
       setPeerStudents(peers);
 
-      const friendRes = await axios.get(`http://localhost:5000/api/friends/${regno}`);
-      const fList = friendRes.data.friends || [];
-      setFriendsList(fList);
-      setPendingRequests(friendRes.data.pending_requests || []);
-
-      if (fList.length > 0 && (!selectedFriend || !fList.includes(selectedFriend))) {
-        setSelectedFriend(fList[0]);
-      } else if (fList.length === 0) {
-        setSelectedFriend('');
+      if (peers.length > 0 && (!selectedFriend || !peers.includes(selectedFriend))) {
+        setSelectedFriend(peers[0]);
       }
     } catch (err) { console.error(err); }
     finally { setLoading(false); }
@@ -91,33 +79,8 @@ const StudentDashboard = () => {
   useEffect(() => { fetchSummary(); }, [fetchSummary]);
 
   useEffect(() => {
-    if (regno) {
-      socket.emit('join', { regno });
-    }
-  }, [regno]);
-
-  useEffect(() => {
-    socket.on('new_friend_request', (data) => {
-      setPendingRequests(prev => {
-        if (!prev.includes(data.sender)) return [...prev, data.sender];
-        return prev;
-      });
-      setIncomingPing(data.sender);
-    });
-
-    socket.on('friend_request_approved', (data) => {
-      setFriendsList(prev => {
-        if (!prev.includes(data.user)) return [...prev, data.user];
-        return prev;
-      });
-      fetchSummary(); 
-    });
-
-    return () => {
-      socket.off('new_friend_request');
-      socket.off('friend_request_approved');
-    };
-  }, [fetchSummary]);
+    // Socket logic removed as per request
+  }, []);
 
   const handleLogWellbeing = async (e) => {
     e.preventDefault();
@@ -142,7 +105,7 @@ const StudentDashboard = () => {
 
   const handleFriendLog = async (e) => {
     e.preventDefault();
-    if (!selectedFriend || !friendsList.includes(selectedFriend)) return;
+    if (!selectedFriend) return;
     setFriendSaving(true);
     try {
       await axios.post('http://localhost:5000/api/wellbeing', {
@@ -152,40 +115,14 @@ const StudentDashboard = () => {
         friend_stress_obs: parseInt(friendForm.stress_obs),
         friend_social_obs: parseInt(friendForm.social_obs),
       });
-      setFriendLogStatus('Friend observation saved!');
+      setFriendLogStatus('Peer observation saved!');
       setTimeout(() => setFriendLogStatus(''), 3000);
       fetchSummary();
-    } catch { alert('Failed to save friend entry.'); }
+    } catch { alert('Failed to save peer entry.'); }
     finally { setFriendSaving(false); }
   };
 
-  const handleSendReq = async (e) => {
-    e.preventDefault();
-    if (!addFriendRegno) return;
-    try {
-      await axios.post('http://localhost:5000/api/friends/request', { sender: regno, target: addFriendRegno });
-      setConnStatus('Request sent!');
-      setAddFriendRegno('');
-      setTimeout(() => setConnStatus(''), 3000);
-      fetchSummary();
-    } catch { alert('Failed to send request.'); }
-  };
-
-  const handleApprove = async (requester) => {
-    try {
-      await axios.post('http://localhost:5000/api/friends/approve', { user: regno, requester });
-      if (incomingPing === requester) setIncomingPing(null);
-      fetchSummary();
-    } catch { alert('Failed to approve request.'); }
-  };
-
-  const handleReject = async (requester) => {
-    try {
-      await axios.post('http://localhost:5000/api/friends/reject', { user: regno, requester });
-      if (incomingPing === requester) setIncomingPing(null);
-      fetchSummary();
-    } catch { alert('Failed to reject request.'); }
-  };
+  // Friend request handlers removed
 
   const handleBook = async (isSos = false) => {
     if (!isSos && !bookingDate) { alert('Please select a date.'); return; }
@@ -211,29 +148,7 @@ const StudentDashboard = () => {
   return (
     <div className="animate-fade-in" style={{ position: 'relative' }}>
       
-      {/* Real-time incoming ping modal */}
-      {incomingPing && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }}>
-          <div className="glass-panel" style={{ background: 'var(--bg-dark)', border: '1px solid var(--primary)', padding: '32px', textAlign: 'center', maxWidth: '400px', width: '90%', animation: 'fade-in 0.3s ease-out' }}>
-            <div style={{ fontSize: '48px', marginBottom: '16px' }}>👋</div>
-            <h2 style={{ marginBottom: '16px', color: 'var(--text-main)' }}>Incoming Friend Request!</h2>
-            <p style={{ marginBottom: '24px', color: 'var(--text-muted)' }}>
-              <strong>{incomingPing.toUpperCase()}</strong> has sent you a connection ping. They want to be able to log peer observations for you.
-            </p>
-            <div style={{ display: 'flex', gap: '16px', justifyContent: 'center' }}>
-              <button className="btn btn-success" style={{ width: '120px' }} onClick={() => handleApprove(incomingPing)}>
-                Approve
-              </button>
-              <button className="btn btn-danger" style={{ background: 'transparent', border: '1px solid var(--danger)', color: 'var(--danger)', width: '120px' }} onClick={() => handleReject(incomingPing)}>
-                Reject
-              </button>
-            </div>
-            <button style={{ marginTop: '24px', background: 'transparent', border: 'none', color: 'var(--text-muted)', textDecoration: 'underline', cursor: 'pointer', fontSize: '0.85rem' }} onClick={() => setIncomingPing(null)}>
-              Decide later
-            </button>
-          </div>
-        </div>
-      )}
+
 
       <div className="dashboard-header">
         <h1>Welcome, Reg. No. {regno}</h1>
@@ -340,10 +255,10 @@ const StudentDashboard = () => {
         <form onSubmit={handleFriendLog}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '28px' }}>
             <div>
-              <label style={{ display: 'block', marginBottom: '8px' }}>Select Friend</label>
+              <label style={{ display: 'block', marginBottom: '8px' }}>Select Student</label>
               <select value={selectedFriend} onChange={e => setSelectedFriend(e.target.value)}>
-                {friendsList.map((p, i) => <option key={i} value={p}>{p}</option>)}
-                {friendsList.length === 0 && <option value="">No friends added yet</option>}
+                {peerStudents.map((p, i) => <option key={i} value={p}>{p}</option>)}
+                {peerStudents.length === 0 && <option value="">No other students found</option>}
               </select>
             </div>
             <div>
@@ -374,64 +289,7 @@ const StudentDashboard = () => {
         </form>
       </div>
 
-      {/* ─── Manage Friends ─── */}
-      <div className="glass-panel" style={{ marginBottom: '32px', border: '1px solid var(--primary)' }}>
-        <h2 style={{ marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--primary)' }}>
-          <span style={{ fontSize: '22px' }}>🤝</span> Manage Friend Connections
-        </h2>
 
-        {pendingRequests.length > 0 && (
-          <div style={{ marginBottom: '24px', background: 'rgba(239,68,68,0.05)', padding: '16px', borderRadius: '8px', borderLeft: '4px solid var(--danger)' }}>
-            <h3 style={{ fontSize: '1rem', marginBottom: '12px', color: 'var(--danger)' }}>Pending Requests</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {pendingRequests.map(req => (
-                <div key={req} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.05)', padding: '8px 12px', borderRadius: '4px' }}>
-                  <span><strong style={{ color: 'var(--text-main)' }}>{req.toUpperCase()}</strong> wants to add you</span>
-                  <div style={{ display: 'flex', gap: '8px' }}>
-                    <button className="btn btn-success" style={{ padding: '6px 12px', fontSize: '0.8rem' }} onClick={() => handleApprove(req)}>Approve</button>
-                    <button className="btn btn-danger" style={{ padding: '6px 12px', fontSize: '0.8rem' }} onClick={() => handleReject(req)}>Reject</button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        <form onSubmit={handleSendReq} style={{ display: 'flex', gap: '16px', alignItems: 'flex-end', marginBottom: '24px' }}>
-          <div style={{ flex: '1', maxWidth: '300px' }}>
-            <label style={{ display: 'block', marginBottom: '8px' }}>Send Friend Request</label>
-            <input
-              list="peers_list"
-              type="text"
-              value={addFriendRegno}
-              onChange={e => setAddFriendRegno(e.target.value)}
-              placeholder="Friend's Reg No."
-              style={{ marginBottom: 0 }}
-              required
-            />
-            <datalist id="peers_list">
-              {peerStudents.map((p, i) => <option key={i} value={p} />)}
-            </datalist>
-          </div>
-          <button type="submit" className="btn btn-primary">Send Request</button>
-          {connStatus && <span style={{ color: 'var(--success)' }}>{connStatus}</span>}
-        </form>
-
-        <div>
-          <h3 style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginBottom: '8px' }}>My Friends List</h3>
-          {friendsList.length > 0 ? (
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-              {friendsList.map(f => (
-                <span key={f} style={{ background: 'rgba(59,130,246,0.1)', color: 'var(--primary)', padding: '6px 12px', borderRadius: '16px', fontSize: '0.9rem', border: '1px solid rgba(59,130,246,0.3)' }}>
-                  {f.toUpperCase()}
-                </span>
-              ))}
-            </div>
-          ) : (
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>You haven't added any friends yet. Add them above to let them log observations for you!</p>
-          )}
-        </div>
-      </div>
 
       {/* ─── 7-Day Summary ─── */}
       {summary?.has_data && (
@@ -462,7 +320,7 @@ const StudentDashboard = () => {
             </div>
 
             <div className="glass-panel" style={{ border: fr?.count ? '1px solid rgba(52,211,153,0.35)' : '' }}>
-              <h3 style={{ color: 'var(--text-muted)', marginBottom: '16px', fontSize: '0.9rem' }}>👥 Friend Observations</h3>
+              <h3 style={{ color: 'var(--text-muted)', marginBottom: '16px', fontSize: '0.9rem' }}>👥 Peer Observations</h3>
               {fr?.count ? (
                 <>
                   {row('Mood', fr?.avg_mood_obs, '/5', 'var(--accent)')}
@@ -470,7 +328,7 @@ const StudentDashboard = () => {
                   {row('Social Life', fr?.avg_social_obs, '/5', '#34d399')}
                   <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '8px' }}>{fr.count} report(s)</p>
                 </>
-              ) : <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>No friend data yet. Friends can use the <strong>Friend Portal</strong>.</p>}
+              ) : <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>No peer data yet. Peers can log observations for you from their dashboard.</p>}
             </div>
 
           </div>

@@ -150,7 +150,7 @@ def send_friend_request():
         {"$addToSet": {"pending_requests": sender}},
         upsert=True
     )
-    socketio.emit('new_friend_request', {'sender': sender}, to=target)
+    # socketio.emit('new_friend_request', {'sender': sender}, to=target)
     return jsonify({"message": "Request sent"}), 200
 
 @app.route('/api/friends/approve', methods=['POST'])
@@ -173,7 +173,7 @@ def approve_friend():
         {"$addToSet": {"friends": user}},
         upsert=True
     )
-    socketio.emit('friend_request_approved', {'user': user}, to=requester)
+    # socketio.emit('friend_request_approved', {'user': user}, to=requester)
     return jsonify({"message": "Approved"}), 200
 
 @app.route('/api/friends/reject', methods=['POST'])
@@ -189,11 +189,11 @@ def reject_friend():
 
 @socketio.on('join')
 def on_join(data):
-    regno = str(data.get('regno', '')).strip().lower()
-    print(f"DEBUG SOCKET: Received join request for {regno}")
-    if regno:
-        join_room(regno)
-        print(f"DEBUG SOCKET: {regno} officially joined room")
+    # Support both friend-based regnos and room-based video calls
+    target = data.get('regno') or data.get('room')
+    if target:
+        join_room(target)
+        print(f"DEBUG SOCKET: Joined room/user {target}")
 
 # ─────────────────────────────────────────────
 #  GET /api/wellbeing/summary/<regno>
@@ -214,7 +214,7 @@ def get_wellbeing_summary(regno):
         avg_stress  = safe_avg(s_entries, 'stress')
         avg_mood    = safe_avg(s_entries, 'mood')
         is_alarming = (avg_mood is not None and avg_mood <= 2.5) or \
-                      (avg_stress is not None and avg_stress >= 4.0)
+                    (avg_stress is not None and avg_stress >= 4.0)
 
         return jsonify({
             "has_data": True,
@@ -310,7 +310,7 @@ def student_details_by_block(block):
             "avg_social": safe_avg(entries, 'social'),
             "logs_count": len(entries),
             "is_alarming": (avg_mood is not None and avg_mood <= 2.5) or
-                           (avg_stress is not None and avg_stress >= 4.0)
+                        (avg_stress is not None and avg_stress >= 4.0)
         })
 
     result.sort(key=lambda x: (x.get('avg_stress') or 0), reverse=True)
