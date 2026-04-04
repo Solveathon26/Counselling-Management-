@@ -33,7 +33,8 @@ const StudentDashboard = () => {
   const [friendSaving, setFriendSaving] = useState(false);
   const [friendLogStatus, setFriendLogStatus] = useState('');
 
-
+  const [addFriendRegno, setAddFriendRegno] = useState('');
+  const [connStatus, setConnStatus] = useState('');
 
   const [complaintMsg, setComplaintMsg] = useState('');
   const [complaintStatus, setComplaintStatus] = useState('');
@@ -55,20 +56,20 @@ const StudentDashboard = () => {
 
   const fetchSummary = useCallback(async () => {
     try {
-      const res = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/wellbeing/summary/${regno}`);
+      const res = await axios.get(`http://localhost:5000/api/wellbeing/summary/${regno}`);
       setSummary(res.data);
 
-      const cRes = await axios.get((process.env.REACT_APP_API_URL || (process.env.REACT_APP_API_URL || 'http://localhost:5000')) + '/api/counsellors');
+      const cRes = await axios.get('http://localhost:5000/api/counsellors');
       setCounsellors(cRes.data);
       if (cRes.data.length > 0 && !selectedCounsellor) {
         setSelectedCounsellor(cRes.data[0].name);
       }
 
-      const aptRes = await axios.get((process.env.REACT_APP_API_URL || (process.env.REACT_APP_API_URL || 'http://localhost:5000')) + '/api/counselling/appointments');
+      const aptRes = await axios.get('http://localhost:5000/api/counselling/appointments');
       const myApts = aptRes.data.filter(a => a.regno === regno);
       setAppointments(myApts);
 
-      const stdRes = await axios.get((process.env.REACT_APP_API_URL || (process.env.REACT_APP_API_URL || 'http://localhost:5000')) + '/api/students/all');
+      const stdRes = await axios.get('http://localhost:5000/api/students/all');
       const peers = stdRes.data.filter(id => id !== regno);
       setPeerStudents(peers);
 
@@ -89,7 +90,7 @@ const StudentDashboard = () => {
     e.preventDefault();
     setSaving(true);
     try {
-      await axios.post((process.env.REACT_APP_API_URL || (process.env.REACT_APP_API_URL || 'http://localhost:5000')) + '/api/wellbeing', {
+      await axios.post('http://localhost:5000/api/wellbeing', {
         regno,
         block,
         submitted_by: 'student',
@@ -112,7 +113,7 @@ const StudentDashboard = () => {
     if (!selectedFriend) return;
     setFriendSaving(true);
     try {
-      await axios.post((process.env.REACT_APP_API_URL || (process.env.REACT_APP_API_URL || 'http://localhost:5000')) + '/api/wellbeing', {
+      await axios.post('http://localhost:5000/api/wellbeing', {
         regno: selectedFriend,
         block,
         submitted_by: 'friend',
@@ -131,7 +132,7 @@ const StudentDashboard = () => {
   const handleBook = async (isSos = false) => {
     if (!isSos && !bookingDate) { alert('Please select a date.'); return; }
     try {
-      await axios.post((process.env.REACT_APP_API_URL || (process.env.REACT_APP_API_URL || 'http://localhost:5000')) + '/api/counselling/book', {
+      await axios.post('http://localhost:5000/api/counselling/book', {
         regno,
         date: isSos ? new Date().toISOString().split('T')[0] : bookingDate,
         is_sos: isSos,
@@ -147,7 +148,7 @@ const StudentDashboard = () => {
     e.preventDefault();
     if (!complaintMsg.trim()) return;
     try {
-      await axios.post((process.env.REACT_APP_API_URL || (process.env.REACT_APP_API_URL || 'http://localhost:5000')) + '/api/complaints', {
+      await axios.post('http://localhost:5000/api/complaints', {
         block: block,
         message: complaintMsg
       });
@@ -162,6 +163,7 @@ const StudentDashboard = () => {
   if (loading) return <div style={{ padding: '40px', color: 'var(--text-muted)' }}>Loading...</div>;
 
   const s = summary?.student;
+  const p = summary?.parent;
   const fr = summary?.friend;
 
   return (
