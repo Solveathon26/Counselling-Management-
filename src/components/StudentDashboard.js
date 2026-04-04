@@ -2,6 +2,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
 import { ShieldAlert, Calendar, CheckCircle, Activity, Heart, Moon, Zap, Video, MessageSquare } from 'lucide-react';
 import { useUser } from '@clerk/react';
+import { sendSosAlert, sendHighRiskAlert } from '../utils/emailService';
 
 
 const row = (label, val, unit = '', color = 'var(--text-main)') =>
@@ -38,6 +39,8 @@ const StudentDashboard = () => {
 
   const [complaintMsg, setComplaintMsg] = useState('');
   const [complaintStatus, setComplaintStatus] = useState('');
+
+  const emailSentRef = React.useRef(false);
 
   const [form, setForm] = useState({
     mood_score: 3,
@@ -81,6 +84,14 @@ const StudentDashboard = () => {
   }, [regno, selectedCounsellor, selectedFriend]);
 
   useEffect(() => { fetchSummary(); }, [fetchSummary]);
+
+  useEffect(() => {
+    if (summary?.prediction?.risk_level === 'High' && !emailSentRef.current) {
+      sendHighRiskAlert(regno, summary.prediction.risk_score)
+        .then(() => { emailSentRef.current = true; })
+        .catch(err => console.error('Failed to send automated ML alert:', err));
+    }
+  }, [summary, regno]);
 
   useEffect(() => {
     // Socket logic removed as per request
@@ -139,6 +150,9 @@ const StudentDashboard = () => {
         counsellor_name: isSos ? 'Emergency Duty Counsellor' : selectedCounsellor
       });
       setBookingStatus(isSos ? 'SOS Alert Sent! Counsellor will contact you shortly.' : 'Session Booked!');
+      if (isSos) {
+        sendSosAlert(regno, 'Emergency Duty Counsellor');
+      }
       fetchSummary();
       setTimeout(() => setBookingStatus(''), 5000);
     } catch { alert('Failed to book session.'); }

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { ShieldAlert, CheckCircle, Activity, Heart, Moon } from 'lucide-react';
 import { useUser } from '@clerk/react';
+import { sendParentAlert } from '../utils/emailService';
 
 const row = (label, val, unit = '', color = 'var(--text-main)') =>
   val != null ? (
@@ -77,6 +78,7 @@ const ParentDashboard = () => {
         regno: regno.trim().toLowerCase(),
         message: alertMsg || 'Parent reported concerns regarding student.'
       });
+      await sendParentAlert(regno.trim().toLowerCase(), alertMsg || 'Parent reported concerns regarding student.');
       setAlerted(true);
       setTimeout(() => setAlerted(false), 5000);
       setAlertMsg('');
