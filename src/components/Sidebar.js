@@ -6,7 +6,7 @@ import { useUser, useClerk } from '@clerk/react';
 const Sidebar = () => {
   const { user } = useUser();
   const { signOut } = useClerk();
-  
+
   const userName = user?.username || 'User';
   const role = user?.publicMetadata?.role || user?.unsafeMetadata?.role || 'student';
 
@@ -17,26 +17,26 @@ const Sidebar = () => {
   return (
     <div className="sidebar">
       <h2 className="gradient-text" style={{ fontSize: '1.8rem', marginBottom: '2rem' }}>
-        Pulse Tracker
+        VCalm
       </h2>
 
       <div style={{ flex: 1 }}>
         {role === 'student' && (
-          <NavLink to="/student" className={({isActive}) => `sidebar-link ${isActive ? 'active' : ''}`}>
+          <NavLink to="/student" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
             <User size={20} />
-            <span>My Pulse</span>
+            <span>My Essentials</span>
           </NavLink>
         )}
 
         {(role === 'warden' || role === 'counsellor') && (
-          <NavLink to="/warden" className={({isActive}) => `sidebar-link ${isActive ? 'active' : ''}`}>
+          <NavLink to="/warden" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
             <Activity size={20} />
             <span>Block Analytics</span>
           </NavLink>
         )}
 
         {role === 'counsellor' && (
-          <NavLink to="/counsellor" className={({isActive}) => `sidebar-link ${isActive ? 'active' : ''}`}>
+          <NavLink to="/counsellor" className={({ isActive }) => `sidebar-link ${isActive ? 'active' : ''}`}>
             <ShieldAlert size={20} />
             <span>Counsellor Insights</span>
           </NavLink>
