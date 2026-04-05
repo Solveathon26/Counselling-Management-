@@ -546,4 +546,5 @@ def get_complaints():
     return jsonify(complaints), 200
 
 if __name__ == '__main__':
-    socketio.run(app, port=5000, debug=True, use_reloader=True, allow_unsafe_werkzeug=True)
+    port = int(os.environ.get("PORT", 5000))
+    socketio.run(app, host='0.0.0.0', port=port, debug=True, use_reloader=True, allow_unsafe_werkzeug=True)
