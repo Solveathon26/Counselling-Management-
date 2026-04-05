@@ -210,29 +210,27 @@ const StudentDashboard = () => {
       {summary?.prediction && (
         <div className="glass-panel" style={{
           marginBottom: '32px',
-          border: `1px solid ${summary.prediction.risk_level === 'High' ? 'var(--danger)' : 'var(--accent)'}`,
+          border: '1px solid var(--accent)',
           background: 'rgba(255,255,255,0.02)'
         }}>
           <h3 style={{ marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--accent)' }}>
-            <Zap size={20} /> ML Health Insight
+            <Zap size={20} /> AI Well-being Score
           </h3>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <p style={{ color: 'var(--text-muted)', margin: 0 }}>
-              Based on your patterns, our AI predicts your current stress level as:
+              Our AI model assesses your recent health and stress patterns as:
             </p>
             <div style={{ textAlign: 'right' }}>
-              <span style={{
-                background: summary.prediction.risk_level === 'High' ? 'var(--danger)' : 'var(--accent)',
-                color: 'white',
-                padding: '4px 12px',
-                borderRadius: '20px',
-                fontWeight: 'bold',
-                fontSize: '1rem'
+              <div style={{ 
+                fontSize: '1.5rem', 
+                fontWeight: 'bold', 
+                color: 'var(--accent)',
+                textShadow: '0 0 10px rgba(139, 92, 246, 0.3)'
               }}>
-                {summary.prediction.risk_level} Risk
-              </span>
+                {summary.prediction.risk_score}/100
+              </div>
               <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '4px' }}>
-                Score: {summary.prediction.risk_score}/100
+                Health Indicator
               </div>
             </div>
           </div>
