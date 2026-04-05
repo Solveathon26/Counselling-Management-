@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { io } from 'socket.io-client';
 import { Video, VideoOff, Mic, MicOff, PhoneOff, ShieldCheck } from 'lucide-react';
+import API_URL from '../config';
 
 const VideoCall = () => {
   const { roomId } = useParams();
@@ -72,7 +73,7 @@ const VideoCall = () => {
         }
 
         // 2. Connect Signaling
-        socketRef.current = io((process.env.REACT_APP_API_URL || 'http://localhost:5000'));
+        socketRef.current = io(API_URL);
         socketRef.current.emit('join', { room: roomId });
         setStatus('Waiting for other participant...');
 

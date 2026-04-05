@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { SignUp, useUser } from '@clerk/react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import API_URL from '../config';
 
 const ParentSignUp = () => {
   const navigate = useNavigate();
@@ -17,7 +18,7 @@ const ParentSignUp = () => {
     try {
       // Logic to update Clerk metadata or save link in MongoDB
       // For now, let's assume we update Clerk metadata via a backend proxy
-      await axios.post((process.env.REACT_APP_API_URL || (process.env.REACT_APP_API_URL || 'http://localhost:5000')) + '/api/users/link', {
+      await axios.post(`${API_URL}/api/users/link`, {
         clerk_id: user.id,
         role: 'parent',
         linked_regno: studentRegno.trim().toLowerCase()

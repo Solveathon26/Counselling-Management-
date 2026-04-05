@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { ShieldAlert, CheckCircle, Activity, Heart, Moon } from 'lucide-react';
 import { useUser } from '@clerk/react';
+import API_URL from '../config';
 import { sendParentAlert } from '../utils/emailService';
 
 const row = (label, val, unit = '', color = 'var(--text-main)') =>
@@ -33,17 +34,17 @@ const ParentDashboard = () => {
       if (!user) return;
       setLoading(true);
       try {
-        const res = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/users/meta/${user.id}`);
+        const res = await axios.get(`${API_URL}/api/users/meta/${user.id}`);
         if (res.data.linked_regno) {
           const lr = res.data.linked_regno.trim().toLowerCase();
           setRegno(lr);
-          const summaryRes = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/wellbeing/summary/${lr}`);
+          const summaryRes = await axios.get(`${API_URL}/api/wellbeing/summary/${lr}`);
           setSummary(summaryRes.data);
         } else if (user.publicMetadata?.linkedStudentRegno) {
           // Fallback if user has Clerk metadata instead
           const cr = user.publicMetadata.linkedStudentRegno.trim().toLowerCase();
           setRegno(cr);
-          const summaryRes = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/wellbeing/summary/${cr}`);
+          const summaryRes = await axios.get(`${API_URL}/api/wellbeing/summary/${cr}`);
           setSummary(summaryRes.data);
         }
       } catch (err) {
@@ -61,7 +62,7 @@ const ParentDashboard = () => {
     setLoading(true);
     setSummary(null);
     try {
-      const res = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/wellbeing/summary/${regno.trim().toLowerCase()}`);
+      const res = await axios.get(`${API_URL}/api/wellbeing/summary/${regno.trim().toLowerCase()}`);
       setSummary(res.data);
     } catch {
       alert('Failed to fetch analytics.');
@@ -74,7 +75,7 @@ const ParentDashboard = () => {
     e.preventDefault();
     setAlerting(true);
     try {
-      await axios.post((process.env.REACT_APP_API_URL || (process.env.REACT_APP_API_URL || 'http://localhost:5000')) + '/api/warden/alert', {
+      await axios.post(`${API_URL}/api/warden/alert`, {
         regno: regno.trim().toLowerCase(),
         message: alertMsg || 'Parent reported concerns regarding student.'
       });
@@ -94,7 +95,7 @@ const ParentDashboard = () => {
     if (!regno) return;
     setSavingLog(true);
     try {
-      await axios.post((process.env.REACT_APP_API_URL || (process.env.REACT_APP_API_URL || 'http://localhost:5000')) + '/api/wellbeing', {
+      await axios.post(`${API_URL}/api/wellbeing`, {
         regno: regno.trim().toLowerCase(),
         submitted_by: 'parent',
         parent_stress_obs: parseInt(parentStress)

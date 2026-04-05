@@ -3,6 +3,7 @@ import axios from 'axios';
 import { ShieldAlert, Calendar, CheckCircle, Activity, Heart, Moon, Zap, Video, MessageSquare } from 'lucide-react';
 import { useUser } from '@clerk/react';
 import { sendSosAlert, sendHighRiskAlert } from '../utils/emailService';
+import API_URL from '../config';
 
 
 const row = (label, val, unit = '', color = 'var(--text-main)') =>
@@ -59,20 +60,20 @@ const StudentDashboard = () => {
 
   const fetchSummary = useCallback(async () => {
     try {
-      const res = await axios.get(`http://localhost:5000/api/wellbeing/summary/${regno}`);
+      const res = await axios.get(`${API_URL}/api/wellbeing/summary/${regno}`);
       setSummary(res.data);
 
-      const cRes = await axios.get('http://localhost:5000/api/counsellors');
+      const cRes = await axios.get(`${API_URL}/api/counsellors`);
       setCounsellors(cRes.data);
       if (cRes.data.length > 0 && !selectedCounsellor) {
         setSelectedCounsellor(cRes.data[0].name);
       }
 
-      const aptRes = await axios.get('http://localhost:5000/api/counselling/appointments');
+      const aptRes = await axios.get(`${API_URL}/api/counselling/appointments`);
       const myApts = aptRes.data.filter(a => a.regno === regno);
       setAppointments(myApts);
 
-      const stdRes = await axios.get('http://localhost:5000/api/students/all');
+      const stdRes = await axios.get(`${API_URL}/api/students/all`);
       const peers = stdRes.data.filter(id => id !== regno);
       setPeerStudents(peers);
 
@@ -101,7 +102,7 @@ const StudentDashboard = () => {
     e.preventDefault();
     setSaving(true);
     try {
-      await axios.post('http://localhost:5000/api/wellbeing', {
+      await axios.post(`${API_URL}/api/wellbeing`, {
         regno,
         block,
         submitted_by: 'student',
@@ -124,7 +125,7 @@ const StudentDashboard = () => {
     if (!selectedFriend) return;
     setFriendSaving(true);
     try {
-      await axios.post('http://localhost:5000/api/wellbeing', {
+      await axios.post(`${API_URL}/api/wellbeing`, {
         regno: selectedFriend,
         block,
         submitted_by: 'friend',
@@ -143,7 +144,7 @@ const StudentDashboard = () => {
   const handleBook = async (isSos = false) => {
     if (!isSos && !bookingDate) { alert('Please select a date.'); return; }
     try {
-      await axios.post('http://localhost:5000/api/counselling/book', {
+      await axios.post(`${API_URL}/api/counselling/book`, {
         regno,
         date: isSos ? new Date().toISOString().split('T')[0] : bookingDate,
         is_sos: isSos,
@@ -162,7 +163,7 @@ const StudentDashboard = () => {
     e.preventDefault();
     if (!complaintMsg.trim()) return;
     try {
-      await axios.post('http://localhost:5000/api/complaints', {
+      await axios.post(`${API_URL}/api/complaints`, {
         block: block,
         message: complaintMsg
       });

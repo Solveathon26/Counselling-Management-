@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { AlertCircle, Lock, Users, ChevronDown, ChevronUp, UserPlus, MessageSquare } from 'lucide-react';
+import API_URL from '../config';
 
 const WardenDashboard = () => {
   const navigate = useNavigate();
@@ -17,8 +18,8 @@ const WardenDashboard = () => {
     const fetchAnalytics = async () => {
       try {
         const [res, compRes] = await Promise.all([
-          axios.get((process.env.REACT_APP_API_URL || (process.env.REACT_APP_API_URL || 'http://localhost:5000')) + '/api/analytics/blocks'),
-          axios.get((process.env.REACT_APP_API_URL || (process.env.REACT_APP_API_URL || 'http://localhost:5000')) + '/api/complaints')
+          axios.get(`${API_URL}/api/analytics/blocks`),
+          axios.get(`${API_URL}/api/complaints`)
         ]);
         setAnalytics(res.data);
         setComplaints(compRes.data);
@@ -41,7 +42,7 @@ const WardenDashboard = () => {
     setSelectedBlock(block);
     setStudentsLoading(true);
     try {
-      const res = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/analytics/students/${block}`);
+      const res = await axios.get(`${API_URL}/api/analytics/students/${block}`);
       setStudents(res.data);
     } catch (err) {
       console.error(err);
